@@ -15,11 +15,8 @@ class Engine:
         #       - calls recursive search
         #       - returns Move with best evaluation
         # private: 
-        #   - search(Move candidate, int depth)
-        #       - 
-
-    # Constructors:
-        # - Parameterized: (Board, maxDepth, color)
+        #   - search(Move candidate, int depth, float alpha, float beta)
+        #   - evaluate()
 
     def __init__(self, Board, maxDepth, color):
         self.Board = Board
@@ -57,23 +54,18 @@ class Engine:
     def evalMateOpportunity(self):
         ### Stalemate or checkmate is worst outcome ###
 
-        if (self.Board.legal_moves.count()==0):
-            if (self.Board.turn == self.color):
-                return -999
-            else:
-                return 999
-        else:
-            return 0
+        if (self.Board.legal_moves.count() == 0):
+            return float("-inf") if (self.Board.turn == self.color) else float("inf")
+        return 0
 
     def evalOpening(self):
         # Prioritize the bot developing the opening
-        if (self.Board.fullmove_number<10):
+
+        if (self.Board.fullmove_number < 10):
             if (self.Board.turn == self.color):
                 return 1/30 * self.Board.legal_moves.count()
-            else:
-                return -1/30 * self.Board.legal_moves.count()
-        else:
-            return 0
+            return -1/30 * self.Board.legal_moves.count()
+        return 0
 
     def evalSquareValue(self, square):
         # Takes a square as input and returns
@@ -84,7 +76,7 @@ class Engine:
         if piece_type:
             pieceValue = self.pieceValues[piece_type]
             ishumanColor = self.Board.color_at(square) == self.color
-            return pieceValue if ishumanColor else -pieceValue # python ternary operator
+            return pieceValue if ishumanColor else -pieceValue
         return 0
             
     # Recursive search function
