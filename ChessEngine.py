@@ -7,7 +7,7 @@ class Engine:
         #   - (class object imported from python-chess; not defined by us)
         #   - legal_moves: property of Board
         # - color (b/w)
-        # - maxDepth (higher depth = bigger brain, slower computing time)
+        # - max_depth (higher depth = bigger brain, slower computing time)
 
     # Methods:
         # public:
@@ -18,11 +18,11 @@ class Engine:
         #   - search(Move candidate, int depth, float alpha, float beta)
         #   - evaluate()
 
-    def __init__(self, Board, maxDepth, color):
+    def __init__(self, Board, max_depth, color):
         self.Board = Board
         self.color = color
-        self.maxDepth = maxDepth # depth = ply
-        self.pieceValues = {
+        self.max_depth = max_depth # depth = ply
+        self.piece_values = {
             ch.PAWN : 1,
             ch.ROOK : 5.1,
             ch.BISHOP : 3.33,
@@ -32,40 +32,31 @@ class Engine:
             } # based on Hans Berliner System
     
     def getBestMove(self):
-        bestMove, bestValue = self.search(depth = 1, alpha = float("-inf"), beta = float("inf")) # self is passed automatically
-        print(bestMove, bestValue)
-        return bestMove
+        best_move, best_value = self.search(depth = 1, alpha = float("-inf"), beta = float("inf")) # self is passed automatically
+        print(best_move, best_value)
+        return best_move
 
     def evaluate(self):
+        # Game end - checkmate
+        if self.Board.outcome == ch.Termination.CHECKMATE:
+            return float("-inf") if (self.Board.turn == self.color) else float("inf")
+
+        # Game end - stalemate
+        else if self.Board.outcome(claim_draw = True):
+            return float("-inf")
+
         score = 0
 
-        # Iternate through entire board, sum up piece values of each square
+        # Iterate through entire board, sum up piece values of each square
         for i in range(64):
             score += self.evalSquareValue(ch.SQUARES[i])
 
-        # Misc. score improvements - ADD MORE LOGIC HERE
+        # Misc. score boosts/penalties - ADD MORE LOGIC HERE
         score += (
-              self.evalMateOpportunity()
-            + self.evalOpening()
-            + (0.001 * random.random()) # ensure bot doesn't play exact same moves in each scenario - less predictable
+            (0.001 * random.random()) # ensure bot doesn't play exact same moves in each scenario - less predictable
         )
+        
         return score
-
-    def evalMateOpportunity(self):
-        ### Stalemate or checkmate is worst outcome ###
-
-        if (self.Board.legal_moves.count() == 0):
-            return float("-inf") if (self.Board.turn == self.color) else float("inf")
-        return 0
-
-    def evalOpening(self):
-        # Prioritize the bot developing the opening
-
-        if (self.Board.fullmove_number < 10):
-            if (self.Board.turn == self.color):
-                return 1/30 * self.Board.legal_moves.count()
-            return -1/30 * self.Board.legal_moves.count()
-        return 0
 
     def evalSquareValue(self, square):
         # Takes a square as input and returns
@@ -74,16 +65,15 @@ class Engine:
 
         piece_type = self.Board.piece_type_at(square)
         if piece_type:
-            pieceValue = self.pieceValues[piece_type]
-            ishumanColor = self.Board.color_at(square) == self.color
-            return pieceValue if ishumanColor else -pieceValue
+            is_bot_color = self.Board.color_at(square) == self.color
+            return self.piece_values[piece_type] * (-1,1)[is_bot_color]
         return 0
             
     # Recursive search function
     def search(self, depth, alpha, beta):
         
-        # Reached max depth of search or no possible moves
-        if (depth == self.maxDepth or self.Board.legal_moves.count() == 0):
+        # Reached max depth of search or game end
+        if (depth == self.max_depth or self.Board.outcome(claim_draw = True)):
             return None, self.evaluate()
 
         # - Bot plays every odd turn (odd depth)
