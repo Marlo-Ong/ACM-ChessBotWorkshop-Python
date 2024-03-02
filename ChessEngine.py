@@ -42,7 +42,7 @@ class Engine:
             return float("-inf") if (self.Board.turn == self.color) else float("inf")
 
         # Game end - stalemate
-        else if self.Board.outcome(claim_draw = True):
+        if self.Board.outcome(claim_draw = True):
             return float("-inf")
 
         score = 0
