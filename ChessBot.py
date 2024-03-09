@@ -1,13 +1,13 @@
 import chess as ch # AKA python-chess
 import random
 
-class Engine:
+class Bot:
     # Properties:
         # - Board 
         #   - (class object imported from python-chess; not defined by us)
         #   - legal_moves: property of Board
         # - color (b/w)
-        # - maxDepth (higher depth = bigger brain, slower computing time)
+        # - max_depth (higher depth = bigger brain, slower computing time)
 
     # Methods:
         # public:
@@ -18,10 +18,10 @@ class Engine:
         #   - search(Move candidate, int depth, float alpha, float beta)
         #   - evaluate()
 
-    def __init__(self, Board, maxDepth, color):
+    def __init__(self, Board, max_depth, color):
         self.Board = Board
         self.color = color
-        self.maxDepth = maxDepth # depth = ply
+        self.max_depth = max_depth # depth = ply
         self.pieceValues = {
             ch.PAWN : 1,
             ch.ROOK : 5.1,
@@ -32,33 +32,33 @@ class Engine:
             } # based on Hans Berliner System
     
     def getBestMove(self):
-        bestMove, bestValue = self.search(depth = 1, alpha = float("-inf"), beta = float("inf")) # self is passed automatically
-        print(bestMove, bestValue)
-        return bestMove
+        best_move, best_value = self.search(depth = 1, alpha = float("-inf"), beta = float("inf")) # self is passed automatically
+        print(best_move, best_value)
+        return best_move
 
     def evaluate(self):
         score = 0
 
-        # Iternate through entire board, sum up piece values of each square
+        # Iterate through entire board, sum up piece values of each square
         for i in range(64):
-            score += self.evalSquareValue(ch.SQUARES[i])
+            score += self.eval_square_value(ch.SQUARES[i])
 
         # Misc. score improvements - ADD MORE LOGIC HERE
         score += (
-              self.evalMateOpportunity()
-            + self.evalOpening()
+              self.eval_mate_opportunity()
+            + self.eval_opening()
             + (0.001 * random.random()) # ensure bot doesn't play exact same moves in each scenario - less predictable
         )
         return score
 
-    def evalMateOpportunity(self):
+    def eval_mate_opportunity(self):
         ### Stalemate or checkmate is worst outcome ###
 
         if (self.Board.legal_moves.count() == 0):
             return float("-inf") if (self.Board.turn == self.color) else float("inf")
         return 0
 
-    def evalOpening(self):
+    def eval_opening(self):
         # Prioritize the bot developing the opening
 
         if (self.Board.fullmove_number < 10):
@@ -67,7 +67,7 @@ class Engine:
             return -1/30 * self.Board.legal_moves.count()
         return 0
 
-    def evalSquareValue(self, square):
+    def eval_square_value(self, square):
         # Takes a square as input and returns
         # the corresponding Hans Berliner's
         # system value of the piece atop it
@@ -83,7 +83,7 @@ class Engine:
     def search(self, depth, alpha, beta):
         
         # Reached max depth of search or no possible moves
-        if (depth == self.maxDepth or self.Board.legal_moves.count() == 0):
+        if (depth == self.max_depth or self.Board.legal_moves.count() == 0):
             return None, self.evaluate()
 
         # - Bot plays every odd turn (odd depth)
